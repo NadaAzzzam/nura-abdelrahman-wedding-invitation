@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { type FormEvent, useEffect, useRef, useState } from "react";
 
 const INVITATION = {
   groom: "عبدالرحمن",
@@ -154,6 +154,107 @@ function DetailIcon({ children }: { children: React.ReactNode }) {
   );
 }
 
+function WishForm() {
+  const [guestName, setGuestName] = useState("");
+  const [message, setMessage] = useState("");
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">(
+    "idle",
+  );
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const submitWish = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    setStatus("sending");
+    setErrorMessage("");
+
+    const form = new FormData(event.currentTarget);
+
+    try {
+      const response = await fetch("/api/wishes", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          guestName,
+          message,
+          website: form.get("website"),
+        }),
+      });
+
+      const result = (await response.json()) as { error?: string };
+      if (!response.ok) throw new Error(result.error || "تعذر إرسال الرسالة.");
+
+      setGuestName("");
+      setMessage("");
+      setStatus("success");
+    } catch (error) {
+      setErrorMessage(
+        error instanceof Error ? error.message : "تعذر إرسال الرسالة.",
+      );
+      setStatus("error");
+    }
+  };
+
+  if (status === "success") {
+    return (
+      <div className="wish-success" role="status">
+        <span aria-hidden="true">♡</span>
+        <h3>وصلتنا كلمتك الحلوة</h3>
+        <p>شكرًا لأنك شاركتنا فرحتنا وذكريات يومنا.</p>
+        <button type="button" onClick={() => setStatus("idle")}>
+          اكتب رسالة أخرى
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <form className="wish-form" onSubmit={submitWish}>
+      <div className="field-group">
+        <label htmlFor="guest-name">اسمك</label>
+        <input
+          id="guest-name"
+          value={guestName}
+          onChange={(event) => setGuestName(event.target.value)}
+          maxLength={60}
+          placeholder="الاسم (اختياري)"
+          autoComplete="name"
+        />
+      </div>
+
+      <div className="field-group">
+        <label htmlFor="wish-message">كلمتك الحلوة</label>
+        <textarea
+          id="wish-message"
+          value={message}
+          onChange={(event) => setMessage(event.target.value)}
+          minLength={2}
+          maxLength={500}
+          rows={5}
+          placeholder="اكتبوا لنا دعوة، ذكرى، أو أمنية جميلة..."
+          required
+        />
+        <span className="character-count">{message.length} / 500</span>
+      </div>
+
+      <label className="honeypot" aria-hidden="true">
+        الموقع الإلكتروني
+        <input name="website" tabIndex={-1} autoComplete="off" />
+      </label>
+
+      {status === "error" ? (
+        <p className="form-error" role="alert">
+          {errorMessage}
+        </p>
+      ) : null}
+
+      <button className="send-wish-button" type="submit" disabled={status === "sending"}>
+        <span>{status === "sending" ? "جاري الإرسال..." : "أرسل كلمتك"}</span>
+        <span aria-hidden="true">♡</span>
+      </button>
+    </form>
+  );
+}
+
 export default function Home() {
   const [opening, setOpening] = useState(false);
   const [opened, setOpened] = useState(false);
@@ -272,6 +373,20 @@ export default function Home() {
           </div>
           <div className="map-frame">
             <VenueMap />
+          </div>
+        </section>
+
+        <section className="wishes-section" aria-labelledby="wishes-title">
+          <div className="wishes-copy">
+            <p className="section-kicker">ذكرى منكم تبقى معنا</p>
+            <h2 id="wishes-title">سيبوا لنا كلمة حلوة</h2>
+            <p>
+              دعوة جميلة من القلب، نصيحة لبداية العمر، أو ذكرى تجمعنا بكم —
+              كلماتكم هتفضل جزءًا من فرحتنا.
+            </p>
+          </div>
+          <div className="wishes-form-card">
+            <WishForm />
           </div>
         </section>
 
