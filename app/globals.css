@@ -262,8 +262,8 @@ svg { width: 1.25em; height: 1.25em; }
   inset: 0;
   background-image: var(--couple-photo);
   background-repeat: no-repeat;
-  background-position: 50% 44%;
-  background-size: 142% auto;
+  background-position: 50% 52%;
+  background-size: 160% auto;
   clip-path: polygon(0 0, 100% 0, 50% 100%);
   backface-visibility: hidden;
 }
