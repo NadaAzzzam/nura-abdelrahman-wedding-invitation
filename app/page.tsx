@@ -18,7 +18,6 @@ const INVITATION = {
 };
 
 const VOCAL_TRACK_ID = "qxjRGJezZkQ";
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
 const wishesEndpoint =
   process.env.NEXT_PUBLIC_WISHES_ENDPOINT ||
   "https://nura-wedding-wishes.bonto.run/api/wishes";
@@ -107,22 +106,158 @@ function Countdown() {
   );
 }
 
+type VocalPlayer = {
+  playVideo: () => void;
+  pauseVideo: () => void;
+  destroy: () => void;
+  getIframe: () => HTMLIFrameElement;
+};
+
+type YouTubeNamespace = {
+  Player: new (
+    element: HTMLElement,
+    options: {
+      width?: string;
+      height?: string;
+      host?: string;
+      videoId: string;
+      playerVars?: Record<string, string | number>;
+      events?: {
+        onReady?: (event: { target: VocalPlayer }) => void;
+        onStateChange?: (event: { data: number; target: VocalPlayer }) => void;
+        onAutoplayBlocked?: () => void;
+      };
+    },
+  ) => VocalPlayer;
+};
+
+declare global {
+  interface Window {
+    YT?: YouTubeNamespace;
+    onYouTubeIframeAPIReady?: () => void;
+  }
+}
+
+let youtubeApiPromise: Promise<void> | null = null;
+
+function loadYouTubeApi() {
+  if (window.YT?.Player) return Promise.resolve();
+  if (!youtubeApiPromise) {
+    youtubeApiPromise = new Promise((resolve) => {
+      const previous = window.onYouTubeIframeAPIReady;
+      window.onYouTubeIframeAPIReady = () => {
+        previous?.();
+        resolve();
+      };
+      const script = document.createElement("script");
+      script.src = "https://www.youtube.com/iframe_api";
+      script.async = true;
+      document.head.appendChild(script);
+    });
+  }
+  return youtubeApiPromise;
+}
+
 function VocalButton() {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const playerRef = useRef<VocalPlayer | null>(null);
+  const userPausedRef = useRef(false);
   const [playing, setPlaying] = useState(false);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    let cancelled = false;
+    let player: VocalPlayer | null = null;
+    const mount = document.createElement("div");
+    container.appendChild(mount);
+
+    const play = () => {
+      if (!userPausedRef.current) playerRef.current?.playVideo?.();
+    };
+
+    const onGesture = () => play();
+    window.addEventListener("pointerdown", onGesture, true);
+    window.addEventListener("keydown", onGesture, true);
+
+    const removeGestureListeners = () => {
+      window.removeEventListener("pointerdown", onGesture, true);
+      window.removeEventListener("keydown", onGesture, true);
+    };
+
+    void loadYouTubeApi().then(() => {
+      if (cancelled || !window.YT) return;
+      player = new window.YT.Player(mount, {
+        width: "1",
+        height: "1",
+        host: "https://www.youtube-nocookie.com",
+        videoId: VOCAL_TRACK_ID,
+        playerVars: {
+          autoplay: 1,
+          controls: 0,
+          loop: 1,
+          playlist: VOCAL_TRACK_ID,
+          rel: 0,
+          modestbranding: 1,
+          playsinline: 1,
+          fs: 0,
+          disablekb: 1,
+          origin: window.location.origin,
+        },
+        events: {
+          onReady: (event) => {
+            const frame = event.target.getIframe();
+            frame.title = "بارك الله لكما — فوكال بدون موسيقى";
+            frame.setAttribute("allow", "autoplay; encrypted-media");
+            play();
+          },
+          onStateChange: (event) => {
+            if (userPausedRef.current) {
+              if (event.data === 1 || event.data === 3) event.target.pauseVideo();
+              setPlaying(false);
+              return;
+            }
+            setPlaying(event.data === 1 || event.data === 3);
+            if (event.data === 1) removeGestureListeners();
+          },
+          onAutoplayBlocked: () => setPlaying(false),
+        },
+      });
+      playerRef.current = player;
+    });
+
+    return () => {
+      cancelled = true;
+      removeGestureListeners();
+      playerRef.current = null;
+      try {
+        player?.destroy();
+      } catch {
+        mount.remove();
+      }
+    };
+  }, []);
+
+  const togglePlayback = () => {
+    const player = playerRef.current;
+    if (!player) return;
+    if (playing) {
+      userPausedRef.current = true;
+      player.pauseVideo();
+      setPlaying(false);
+      return;
+    }
+    userPausedRef.current = false;
+    player.playVideo();
+  };
 
   return (
     <div className={`music-control ${playing ? "is-playing" : ""}`}>
-      {playing ? (
-        <iframe
-          className="music-frame"
-          src={`https://www.youtube-nocookie.com/embed/${VOCAL_TRACK_ID}?autoplay=1&controls=0&loop=1&playlist=${VOCAL_TRACK_ID}&start=0`}
-          title="بارك الله لكما — فوكال بدون موسيقى"
-          allow="autoplay"
-        />
-      ) : null}
+      <div ref={containerRef} className="music-frame" />
       <button
         type="button"
-        onClick={() => setPlaying((current) => !current)}
+        onClick={togglePlayback}
         aria-label={playing ? "إيقاف الدعاء" : "تشغيل بارك الله لكما بدون موسيقى"}
         aria-pressed={playing}
       >
@@ -252,7 +387,7 @@ export default function Home() {
   const openInvitation = () => {
     if (opening) return;
     setOpening(true);
-    window.setTimeout(() => setOpened(true), 1180);
+    window.setTimeout(() => setOpened(true), 2100);
   };
 
   return (
@@ -294,7 +429,6 @@ export default function Home() {
         <section className="hero" aria-labelledby="invitation-title">
           <div className="hero-art" aria-hidden="true" />
           <div className="hero-topline">
-            <span className="hero-kicker">دعوة عقد قران</span>
             <span className="hero-monogram">ع <span className="ampersand">&amp;</span> ن</span>
             <div className="hero-tools">
               <time className="hero-date" dateTime="2026-11-06"><span>06</span><span>11</span><span>2026</span></time>
@@ -364,8 +498,7 @@ export default function Home() {
             <span className="footer-flower">✦</span>
             <span>6 نوفمبر 2026</span>
           </div>
-          <p className="footer-credit">صنع بكل حب من أختكم ندى عزام، وأتمنى لكما كل الخير</p>
-          <a className="footer-private" href={`${basePath}/messages/`}>رسائل الضيوف</a>
+          <p className="footer-credit" lang="en" dir="ltr">Made with love by <a className="footer-credit-link" href="mailto:nadaazzam123@outlook.com">Nada Azzam</a>, sister of the bride. Wishing you both all the best.</p>
         </footer>
       </main>
     </>
