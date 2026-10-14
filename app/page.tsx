@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
-import { invitationJsonLd } from "./site";
+import { basePath, invitationJsonLd } from "./site";
 
 const INVITATION = {
   groom: "عبدالرحمن",
@@ -394,66 +394,21 @@ export default function Home() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(invitationJsonLd).replaceAll("<", "\\u003c") }} />
-      {!opened ? (
-        <section className={`envelope-stage ${opening ? "is-opening" : ""}`} aria-label="افتح دعوة عقد القران">
-          <div className="intro-wash intro-wash-one" /><div className="intro-wash intro-wash-two" />
-          <div className="intro-copy">
-            <span className="intro-monogram">ع <span className="ampersand">&amp;</span> ن</span>
-            <p className="eyebrow">دعوة من القلب</p>
-            <p className="intro-title">إلى مَن نحب</p>
-            <p>يسعدنا أن تكونوا بيننا في يومٍ نبدأ به حكايتنا.</p>
-          </div>
-          <div className="envelope-column">
-            <div className="envelope-wrap">
-              <button className="envelope" type="button" onClick={openInvitation} aria-label="افتحوا الظرف">
-                <span className="env-scene" aria-hidden="true">
-                  <span className="env-shadow" />
-                  <span className="env-body" />
-                  <span className="env-card">
-                    <span>عقد قران</span>
-                    <strong>{INVITATION.groom} <span className="ampersand">&amp;</span> {INVITATION.bride}</strong>
-                    <small>06 · 11 · 2026</small>
-                  </span>
-                  <span className="env-flap"><span className="env-photo" /></span>
-                  <span className="env-crease env-crease-left" />
-                  <span className="env-crease env-crease-right" />
-                  <span className="wax-seal"><span>ن</span></span>
-                </span>
-              </button>
-            </div>
-            <button className="open-button" type="button" onClick={openInvitation}><span>افتحوا دعوتكم</span><Icon name="arrow" /></button>
-          </div>
-        </section>
-      ) : null}
-
-      <main className={`invitation ${opened ? "is-visible" : ""}`}>
+      <main className={`invitation ${opening || opened ? "is-visible" : "is-waiting"}`}>
         <section className="hero" aria-labelledby="invitation-title">
           <div className="hero-art" aria-hidden="true" />
-          <div className="hero-topline">
-            <span className="hero-monogram">ع <span className="ampersand">&amp;</span> ن</span>
-            <div className="hero-tools">
-              <time className="hero-date" dateTime="2026-11-06"><span>06</span><span>11</span><span>2026</span></time>
-              <VocalButton />
+          <div className="hero-tools"><VocalButton /></div>
+          <div className="hero-arch">
+            <p className="bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
+            <blockquote>وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً</blockquote>
+            <p className="poster-lead">بقلوب تغمرها الفرح نتشرف بدعوتكم لحضور عقد قران</p>
+            <h1 id="invitation-title"><span>{INVITATION.groom}</span><span className="ampersand">&amp;</span><span>{INVITATION.bride}</span></h1>
+            <div className="poster-date">
+              <p>{INVITATION.time}</p>
+              <div className="poster-num"><span>نوفمبر</span><strong>6</strong><small>2026</small></div>
+              <p>{INVITATION.day}</p>
             </div>
-          </div>
-          <div className="hero-content">
-            <div className="verse-card">
-              <p className="bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
-              <blockquote>﴿ وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً ﴾</blockquote>
-              <p className="surah">سورة الروم · الآية ٢١</p>
-            </div>
-            <div className="hero-title-wrap">
-              <p>بكل الحب، نتشرف بدعوتكم لحضور عقد قران</p>
-              <h1 id="invitation-title"><span>{INVITATION.groom}</span><span className="ampersand">&amp;</span><span>{INVITATION.bride}</span></h1>
-            </div>
-            <div className="hero-invite">
-              <p className="blessing">حضوركم يكمّل فرحتنا</p>
-              <span className="invite-ornament" aria-hidden="true" />
-              <a className="scroll-cue" href="#details" aria-label="انتقل إلى تفاصيل الدعوة">
-                <span className="scroll-cue-label">اكتشفوا التفاصيل</span>
-                <span className="scroll-cue-icon" aria-hidden="true"><Icon name="chevron" /></span>
-              </a>
-            </div>
+            <p className="poster-venue"><Icon name="location" /><span>ب{INVITATION.venue}<br />بعين شمس</span></p>
           </div>
         </section>
 
@@ -505,6 +460,19 @@ export default function Home() {
           <p className="footer-credit" lang="en" dir="ltr">Made with love by <a className="footer-credit-link" href="mailto:nadaazzam123@outlook.com">Nada Azzam</a>, sister of the bride. Wishing you both all the best.</p>
         </footer>
       </main>
+
+      {!opened ? (
+        <button
+          className={`envelope-stage ${opening ? "is-opening" : ""}`}
+          type="button"
+          onClick={openInvitation}
+          aria-label="افتحوا دعوتكم"
+        >
+          <span className="lacy-door lacy-door-left" aria-hidden="true" />
+          <span className="lacy-door lacy-door-right" aria-hidden="true" />
+          <img className="pearl-clasp" src={`${basePath}/lace-clasp.png`} alt="" />
+        </button>
+      ) : null}
     </>
   );
 }

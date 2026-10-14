@@ -92,6 +92,7 @@ export default function RootLayout({
 }>) {
   const couplePhoto = {
     "--couple-photo": `url("${basePath}/watercolor-couple.png")`,
+    "--lace-doors": `url("${basePath}/lace-doors.jpg")`,
   } as CSSProperties;
 
   return (
