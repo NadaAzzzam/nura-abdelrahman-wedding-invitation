@@ -396,7 +396,13 @@ export default function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(invitationJsonLd).replaceAll("<", "\\u003c") }} />
       <main className={`invitation ${opening || opened ? "is-visible" : "is-waiting"}`}>
         <section className="hero" aria-labelledby="invitation-title">
-          <img className="hero-art" src={`${basePath}/watercolor-couple.png`} alt="" />
+          <img
+            className="hero-art"
+            src={`${basePath}/watercolor-couple.png`}
+            alt=""
+            fetchPriority="high"
+            decoding="async"
+          />
           <div className="hero-tools"><VocalButton /></div>
           <div className="hero-arch">
             <p className="bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
@@ -410,6 +416,10 @@ export default function Home() {
             </div>
             <p className="poster-venue"><Icon name="location" /><span>ب{INVITATION.venue}<br />بعين شمس</span></p>
           </div>
+          <a className="hero-scroll" href="#details">
+            <span>اكتشفوا تفاصيل يومنا</span>
+            <Icon name="chevron" />
+          </a>
         </section>
 
         <section className="details-section" id="details" aria-labelledby="details-title">
@@ -446,7 +456,7 @@ export default function Home() {
         </section>
 
         <section className="closing-section">
-          <img className="closing-art" src={`${basePath}/watercolor-couple.png`} alt="" />
+          <img className="closing-art" src={`${basePath}/watercolor-couple.png`} alt="" loading="lazy" decoding="async" />
           <div className="closing-card">
             <span className="closing-monogram">ع <span className="ampersand">&amp;</span> ن</span><p>بارك الله لكما وبارك عليكما</p><h2>وجمع بينكما في خير</h2><span className="closing-mark">ننتظركم بكل الحب</span>
           </div>
@@ -457,7 +467,7 @@ export default function Home() {
             <span className="footer-flower">✦</span>
             <span>6 نوفمبر 2026</span>
           </div>
-          <p className="footer-credit" lang="en" dir="ltr">Made with love by <a className="footer-credit-link" href="mailto:nadaazzam123@outlook.com">Nada Azzam</a>, sister of the bride. Wishing you both all the best.</p>
+          <p className="footer-credit" lang="en" dir="ltr">Made with love by sister of the bride. Wishing you both all the best.</p>
         </footer>
       </main>
 
@@ -473,6 +483,10 @@ export default function Home() {
             <img className="pearl-clasp" src={`${basePath}/lace-clasp.png`} alt="" />
           </span>
           <span className="lacy-door lacy-door-right" aria-hidden="true" />
+          <span className="envelope-prompt">
+            <strong>افتحوا دعوتكم</strong>
+            <small>عبدالرحمن <span aria-hidden="true">&amp;</span> نورا</small>
+          </span>
         </button>
       ) : null}
     </>
