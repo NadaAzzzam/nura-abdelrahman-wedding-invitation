@@ -250,7 +250,7 @@ svg { width: 1.25em; height: 1.25em; }
 .is-opening .env-card {
   z-index: 6;
   visibility: visible;
-  transform: translateY(-78%) rotate(-1.2deg);
+  transform: translateY(-34%) rotate(-1.2deg);
   transition: transform 880ms 420ms cubic-bezier(.16,.84,.32,1), visibility 0s linear 420ms;
 }
 .env-flap {
@@ -437,83 +437,90 @@ svg { width: 1.25em; height: 1.25em; }
   display: flex;
   align-items: center;
   flex-direction: column;
-  gap: 18px;
+  gap: 12px;
   margin-top: auto;
-  padding-top: 8px;
+  padding: 18px 22px 8px;
 }
 .hero-invite .blessing {
   display: inline-flex;
   align-items: center;
-  gap: 16px;
+  gap: 14px;
   margin: 0;
   color: var(--wine);
   font-family: var(--font-display);
-  font-size: clamp(1.35rem, 2.8vw, 1.85rem);
+  font-size: clamp(1.4rem, 2.8vw, 1.9rem);
   font-weight: 700;
   line-height: 1.7;
-  text-shadow: 0 1px 16px rgba(255,248,247,.72);
+  text-shadow: 0 1px 16px rgba(255,248,247,.8);
 }
 .hero-invite .blessing::before,
 .hero-invite .blessing::after {
-  width: 38px;
-  height: 1px;
-  background: linear-gradient(90deg, transparent, rgba(166, 83, 92, .55));
+  width: 7px;
+  height: 7px;
+  border-radius: 1px;
+  background: var(--rose);
+  box-shadow: 0 0 0 3px rgba(166, 83, 92, .12);
   content: "";
+  transform: rotate(45deg);
 }
-.hero-invite .blessing::after {
-  background: linear-gradient(90deg, rgba(166, 83, 92, .55), transparent);
+.invite-ornament {
+  display: block;
+  width: 72px;
+  height: 10px;
+  background:
+    radial-gradient(circle, var(--rose) 1.5px, transparent 1.7px) 50% 50% / 10px 10px no-repeat,
+    linear-gradient(90deg, transparent, rgba(166, 83, 92, .42) 22%, rgba(166, 83, 92, .42) 78%, transparent);
+  background-size: 10px 10px, 100% 1px;
+  background-position: center, center;
+  background-repeat: no-repeat;
 }
 .scroll-cue {
   display: inline-flex;
   align-items: center;
-  flex-direction: column;
-  gap: 11px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  color: var(--ink);
+  gap: 12px;
+  padding: 8px 16px 8px 8px;
+  border: 1px solid rgba(166, 83, 92, .22);
+  border-radius: 999px;
+  background: rgba(255,248,247,.72);
+  color: var(--wine);
   text-decoration: none;
-  transition: transform 220ms ease;
+  box-shadow:
+    0 12px 30px rgba(20, 9, 11, .12),
+    inset 0 1px 0 rgba(255,255,255,.8);
+  backdrop-filter: blur(16px);
+  transition: transform 220ms ease, background 220ms ease, box-shadow 220ms ease, border-color 220ms ease;
 }
-.scroll-cue:hover { transform: translateY(-3px); }
+.scroll-cue:hover {
+  background: rgba(255,248,247,.92);
+  border-color: rgba(166, 83, 92, .36);
+  box-shadow: 0 16px 34px rgba(20, 9, 11, .16);
+  transform: translateY(-3px);
+}
 .scroll-cue-label {
-  color: var(--rose-mid);
+  color: var(--wine);
   font-family: var(--font-body);
-  font-size: .78rem;
+  font-size: .82rem;
   font-weight: 700;
-  letter-spacing: .16em;
+  letter-spacing: .08em;
   line-height: 1;
 }
 .scroll-cue-icon {
   display: grid;
-  width: 48px;
-  height: 48px;
+  width: 32px;
+  height: 32px;
   place-items: center;
-  border: 1px solid rgba(255,248,247,.78);
   border-radius: 50%;
-  background:
-    radial-gradient(circle at 50% 0%, rgba(255,255,255,.62), transparent 52%),
-    rgba(255,248,247,.38);
-  color: var(--wine);
-  box-shadow:
-    0 12px 28px rgba(20, 9, 11, .14),
-    inset 0 1px 0 rgba(255,255,255,.8);
-  backdrop-filter: blur(14px);
+  background: var(--rose-deep);
+  color: #fff8f4;
+  box-shadow: 0 6px 14px rgba(166, 83, 92, .32);
 }
 .scroll-cue-icon svg {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
   animation: cueBounce 1.8s ease-in-out infinite;
 }
-.scroll-cue:hover .scroll-cue-icon {
-  border-color: rgba(166, 83, 92, .28);
-  background:
-    radial-gradient(circle at 50% 0%, rgba(255,255,255,.72), transparent 52%),
-    rgba(255,248,247,.62);
-  color: var(--rose-mid);
-  box-shadow: 0 16px 32px rgba(20, 9, 11, .18);
-}
-@keyframes cueBounce { 50% { transform: translateY(4px); } }
+.scroll-cue:hover .scroll-cue-icon { background: var(--wine); }
+@keyframes cueBounce { 50% { transform: translateY(3px); } }
 
 /* Audio */
 .music-control { position: relative; }
@@ -700,11 +707,11 @@ footer { display: flex; align-items: center; justify-content: center; flex-direc
   .hero-title-wrap { margin-top: 25px; }
   .hero-title-wrap > p { font-size: .83rem; }
   .hero h1 { gap: 10px; font-size: 2.9rem; }
-  .hero-invite { gap: 14px; }
-  .hero-invite .blessing { gap: 10px; font-size: 1.22rem; }
-  .hero-invite .blessing::before,
-  .hero-invite .blessing::after { width: 22px; }
-  .scroll-cue-icon { width: 44px; height: 44px; }
+  .hero-invite { gap: 10px; padding-inline: 12px; }
+  .hero-invite .blessing { gap: 10px; font-size: 1.28rem; }
+  .invite-ornament { width: 56px; }
+  .scroll-cue { padding: 7px 14px 7px 7px; }
+  .scroll-cue-label { font-size: .76rem; }
   .date-poster { right: -12px; }
   .countdown { margin: 38px auto 52px; }
   .countdown-unit { padding: 19px 3px 16px; }

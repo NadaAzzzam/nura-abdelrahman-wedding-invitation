@@ -8,15 +8,16 @@ export const invitation = {
   bride: "نورا",
   title: "دعوة عقد قران عبدالرحمن ونورا",
   description:
-    "نتشرف بدعوتكم لحضور عقد قران عبدالرحمن ونورا يوم الجمعة 6 نوفمبر 2026، الساعة 6:00 مساءً، في مسجد الشهيد حمزة بن عبد المطلب.",
-  shareDescription: "شاركونا فرحتنا يوم الجمعة 6 نوفمبر 2026، الساعة 6:00 مساءً.",
+    "نتشرف بدعوتكم لحضور عقد قران عبدالرحمن ونورا يوم الجمعة 6 نوفمبر 2026، بعد صلاة العشاء، في مسجد عبدالله بن مسعود بعين شمس.",
+  shareDescription: "شاركونا فرحتنا يوم الجمعة 6 نوفمبر 2026، بعد صلاة العشاء.",
   dateTime: "2026-11-06T18:00:00+02:00",
   day: "الجمعة",
   gregorianDate: "6 نوفمبر 2026",
   hijriDate: "26 جمادى الأولى 1448 هـ",
-  time: "الساعة 6:00 مساءً",
-  venue: "مسجد الشهيد حمزة بن عبد المطلب",
-  coordinates: [30.0444, 31.2357] as const,
+  time: "بعد صلاة العشاء",
+  venue: "مسجد عبدالله بن مسعود",
+  area: "عين شمس، القاهرة",
+  coordinates: [30.130129, 31.356288] as const,
 };
 
 export const shareImage = {
@@ -49,6 +50,9 @@ export const invitationJsonLd = {
     name: invitation.venue,
     address: {
       "@type": "PostalAddress",
+      streetAddress: "49J4+3G3، عين شمس الشرقية، قسم عين شمس",
+      addressLocality: "عين شمس",
+      addressRegion: "القاهرة",
       addressCountry: "EG",
     },
     geo: {

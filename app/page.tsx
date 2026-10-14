@@ -10,11 +10,12 @@ const INVITATION = {
   day: "الجمعة",
   gregorianDate: "6 نوفمبر 2026",
   hijriDate: "26 جمادى الأولى 1448 هـ",
-  time: "الساعة 6:00 مساءً",
-  venue: "مسجد الشهيد حمزة بن عبد المطلب",
-  coordinates: [30.0444, 31.2357] as [number, number],
+  time: "بعد صلاة العشاء",
+  venue: "مسجد عبدالله بن مسعود",
+  area: "عين شمس، القاهرة",
+  coordinates: [30.130129, 31.356288] as [number, number],
   mapSearchUrl:
-    "https://www.google.com/maps/search/?api=1&query=%D9%85%D8%B3%D8%AC%D8%AF+%D8%A7%D9%84%D8%B4%D9%87%D9%8A%D8%AF+%D8%AD%D9%85%D8%B2%D8%A9+%D8%A8%D9%86+%D8%B9%D8%A8%D8%AF+%D8%A7%D9%84%D9%85%D8%B7%D9%84%D8%A8",
+    "https://www.google.com/maps/search/?api=1&query=30.130129,31.356288",
 };
 
 const VOCAL_TRACK_ID = "qxjRGJezZkQ";
@@ -283,10 +284,10 @@ function VenueMap() {
 
     void import("leaflet").then((leaflet) => {
       if (!active || !mapElement.current) return;
-      mapInstance = leaflet.map(mapElement.current, { zoomControl: true, scrollWheelZoom: false, attributionControl: false }).setView(INVITATION.coordinates, 14);
+      mapInstance = leaflet.map(mapElement.current, { zoomControl: true, scrollWheelZoom: false, attributionControl: false }).setView(INVITATION.coordinates, 16);
       leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "" }).addTo(mapInstance);
       const markerIcon = leaflet.divIcon({ className: "venue-marker", html: '<span aria-hidden="true">♥</span>', iconSize: [48, 48], iconAnchor: [24, 46] });
-      leaflet.marker(INVITATION.coordinates, { icon: markerIcon }).addTo(mapInstance).bindPopup(`<strong>${INVITATION.venue}</strong>`);
+      leaflet.marker(INVITATION.coordinates, { icon: markerIcon }).addTo(mapInstance).bindPopup(`<strong>${INVITATION.venue}</strong><br />${INVITATION.area}`);
     });
 
     return () => {
@@ -447,6 +448,7 @@ export default function Home() {
             </div>
             <div className="hero-invite">
               <p className="blessing">حضوركم يكمّل فرحتنا</p>
+              <span className="invite-ornament" aria-hidden="true" />
               <a className="scroll-cue" href="#details" aria-label="انتقل إلى تفاصيل الدعوة">
                 <span className="scroll-cue-label">اكتشفوا التفاصيل</span>
                 <span className="scroll-cue-icon" aria-hidden="true"><Icon name="chevron" /></span>
@@ -466,14 +468,14 @@ export default function Home() {
           <div className="detail-grid">
             <article className="detail-card"><span className="detail-icon"><Icon name="calendar" /></span><p>اليوم والتاريخ</p><h3>{INVITATION.day}<br />{INVITATION.gregorianDate}</h3><span>{INVITATION.hijriDate}</span></article>
             <article className="detail-card featured"><span className="detail-icon"><Icon name="clock" /></span><p>الموعد</p><h3>{INVITATION.time}</h3><span>نسعد بوصولكم قبل الموعد بقليل</span></article>
-            <article className="detail-card"><span className="detail-icon"><Icon name="location" /></span><p>المكان</p><h3>{INVITATION.venue}</h3><span>يشرفنا حضوركم</span></article>
+            <article className="detail-card"><span className="detail-icon"><Icon name="location" /></span><p>المكان</p><h3>{INVITATION.venue}</h3><span>{INVITATION.area}</span></article>
           </div>
         </section>
 
         <section className="map-section" aria-labelledby="map-title">
           <div className="map-copy">
             <p className="eyebrow">مكان اللقاء</p><h2 id="map-title">خطوتكم إلينا<br />تكمّل فرحتنا</h2>
-            <div className="venue-line"><Icon name="location" /><p>{INVITATION.venue}</p></div>
+            <div className="venue-line"><Icon name="location" /><p>{INVITATION.venue}<br />{INVITATION.area}</p></div>
             <a href={INVITATION.mapSearchUrl} target="_blank" rel="noreferrer" className="directions-button"><span>افتحوا اتجاهات الوصول</span><Icon name="arrow" /></a>
           </div>
           <div className="map-frame"><VenueMap /></div>
