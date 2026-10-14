@@ -388,7 +388,7 @@ export default function Home() {
   const openInvitation = () => {
     if (opening) return;
     setOpening(true);
-    window.setTimeout(() => setOpened(true), 2100);
+    window.setTimeout(() => setOpened(true), 700);
   };
 
   return (
@@ -396,7 +396,7 @@ export default function Home() {
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(invitationJsonLd).replaceAll("<", "\\u003c") }} />
       <main className={`invitation ${opening || opened ? "is-visible" : "is-waiting"}`}>
         <section className="hero" aria-labelledby="invitation-title">
-          <div className="hero-art" aria-hidden="true" />
+          <img className="hero-art" src={`${basePath}/watercolor-couple.png`} alt="" />
           <div className="hero-tools"><VocalButton /></div>
           <div className="hero-arch">
             <p className="bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
@@ -446,7 +446,7 @@ export default function Home() {
         </section>
 
         <section className="closing-section">
-          <div className="closing-art" aria-hidden="true" />
+          <img className="closing-art" src={`${basePath}/watercolor-couple.png`} alt="" />
           <div className="closing-card">
             <span className="closing-monogram">ع <span className="ampersand">&amp;</span> ن</span><p>بارك الله لكما وبارك عليكما</p><h2>وجمع بينكما في خير</h2><span className="closing-mark">ننتظركم بكل الحب</span>
           </div>
@@ -468,9 +468,11 @@ export default function Home() {
           onClick={openInvitation}
           aria-label="افتحوا دعوتكم"
         >
-          <span className="lacy-door lacy-door-left" aria-hidden="true" />
+          <span className="lacy-panel-left">
+            <span className="lacy-door lacy-door-left" aria-hidden="true" />
+            <img className="pearl-clasp" src={`${basePath}/lace-clasp.png`} alt="" />
+          </span>
           <span className="lacy-door lacy-door-right" aria-hidden="true" />
-          <img className="pearl-clasp" src={`${basePath}/lace-clasp.png`} alt="" />
         </button>
       ) : null}
     </>
