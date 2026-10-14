@@ -42,5 +42,22 @@
     "wrangler": "4.92.0"
   },
   "type": "module",
-  "displayName": "دعوة عقد قران عبدالرحمن ونورا"
+  "displayName": "دعوة عقد قران عبدالرحمن ونورا",
+  "description": "A clean full-stack starter running on\r [vinext](https://github.com/cloudflare/vinext), with optional Cloudflare D1 and\r Drizzle support.",
+  "main": "index.js",
+  "directories": {
+    "example": "examples",
+    "test": "tests"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/NadaAzzzam/nura-abdelrahman-wedding-invitation.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/NadaAzzzam/nura-abdelrahman-wedding-invitation/issues"
+  },
+  "homepage": "https://github.com/NadaAzzzam/nura-abdelrahman-wedding-invitation#readme"
 }

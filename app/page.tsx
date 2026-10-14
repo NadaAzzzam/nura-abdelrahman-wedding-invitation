@@ -444,12 +444,14 @@ export default function Home() {
             <div className="hero-title-wrap">
               <p>بكل الحب، نتشرف بدعوتكم لحضور عقد قران</p>
               <h1 id="invitation-title"><span>{INVITATION.groom}</span><span className="ampersand">&amp;</span><span>{INVITATION.bride}</span></h1>
-              <p className="blessing">حضوركم يكمّل فرحتنا</p>
             </div>
-            <a className="scroll-cue" href="#details" aria-label="انتقل إلى تفاصيل الدعوة">
-              <span className="scroll-cue-label">اكتشفوا التفاصيل</span>
-              <span className="scroll-cue-icon" aria-hidden="true"><Icon name="chevron" /></span>
-            </a>
+            <div className="hero-invite">
+              <p className="blessing">حضوركم يكمّل فرحتنا</p>
+              <a className="scroll-cue" href="#details" aria-label="انتقل إلى تفاصيل الدعوة">
+                <span className="scroll-cue-label">اكتشفوا التفاصيل</span>
+                <span className="scroll-cue-icon" aria-hidden="true"><Icon name="chevron" /></span>
+              </a>
+            </div>
           </div>
         </section>
 

@@ -7,7 +7,7 @@ import { basePath, invitation, shareImage, siteOrigin } from "./site";
 const coupleNames = `${invitation.groom} و${invitation.bride}`;
 
 export const viewport: Viewport = {
-  themeColor: "#f7f1e8",
+  themeColor: "#a6535c",
   colorScheme: "light",
   width: "device-width",
   initialScale: 1,
