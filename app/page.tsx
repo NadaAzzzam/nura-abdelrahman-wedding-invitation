@@ -285,7 +285,6 @@ export default function Home() {
                 </span>
               </button>
             </div>
-            <p className="envelope-hint">الظرف مختوم · اضغطوا لفتح الدعوة</p>
             <button className="open-button" type="button" onClick={openInvitation}><span>افتحوا دعوتكم</span><Icon name="arrow" /></button>
           </div>
         </section>
