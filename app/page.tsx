@@ -1,7 +1,7 @@
 "use client";
 
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
-import { basePath, invitationJsonLd } from "./site";
+import { basePath, invitationJsonLd, mapsUrl } from "./site";
 
 const INVITATION = {
   groom: "عبدالرحمن",
@@ -14,8 +14,7 @@ const INVITATION = {
   venue: "مسجد عبدالله بن مسعود",
   area: "عين شمس، القاهرة",
   coordinates: [30.130129, 31.356288] as [number, number],
-  mapSearchUrl:
-    "https://www.google.com/maps/search/?api=1&query=30.130129,31.356288",
+  mapSearchUrl: mapsUrl,
 };
 
 const VOCAL_TRACK_ID = "qxjRGJezZkQ";
@@ -370,7 +369,7 @@ function WishForm() {
       <div className="field-group">
         <label htmlFor="wish-message">رسالتكم لنا</label>
         <textarea id="wish-message" value={message} onChange={(event) => setMessage(event.target.value)} minLength={2} maxLength={500} rows={5} placeholder="دعوة من القلب، نصيحة لبداية العمر، أو كلمة نحتفظ بها..." required />
-        <span className="character-count">{message.length} / 500</span>
+        <span className="character-count" dir="ltr">{message.length} / 500</span>
       </div>
       <label className="honeypot" aria-hidden="true">الموقع الإلكتروني<input name="website" tabIndex={-1} autoComplete="off" /></label>
       {status === "error" ? <p className="form-error" role="alert">{errorMessage}</p> : null}
@@ -394,12 +393,17 @@ export default function Home() {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(invitationJsonLd).replaceAll("<", "\\u003c") }} />
+      <noscript>
+        <style>{`.envelope-stage{display:none!important}html{overflow:auto!important}.invitation.is-waiting{max-height:none!important;pointer-events:auto!important;transform:none!important}`}</style>
+      </noscript>
       <main className={`invitation ${opening || opened ? "is-visible" : "is-waiting"}`}>
         <section className="hero" aria-labelledby="invitation-title">
           <img
             className="hero-art"
             src={`${basePath}/watercolor-couple.png`}
-            alt=""
+            alt="رسم مائي لعبدالرحمن ونورا في دعوة عقد القران"
+            width={1026}
+            height={1536}
             fetchPriority="high"
             decoding="async"
           />
@@ -411,10 +415,14 @@ export default function Home() {
             <h1 id="invitation-title"><span>{INVITATION.groom}</span><span className="ampersand">&amp;</span><span>{INVITATION.bride}</span></h1>
             <div className="poster-date">
               <p>{INVITATION.time}</p>
-              <div className="poster-num"><span>نوفمبر</span><strong>6</strong><small>2026</small></div>
+              <div className="poster-num">
+                <span>نوفمبر</span>
+                <strong><time dateTime="2026-11-06">6</time></strong>
+                <small>2026</small>
+              </div>
               <p>{INVITATION.day}</p>
             </div>
-            <p className="poster-venue"><Icon name="location" /><span>ب{INVITATION.venue}<br />بعين شمس</span></p>
+            <address className="poster-venue"><Icon name="location" /><span>ب{INVITATION.venue}<br />بعين شمس</span></address>
           </div>
           <a className="hero-scroll" href="#details">
             <span>اكتشفوا تفاصيل يومنا</span>
@@ -431,22 +439,22 @@ export default function Home() {
           </div>
           <Countdown />
           <div className="detail-grid">
-            <article className="detail-card"><span className="detail-icon"><Icon name="calendar" /></span><p>اليوم والتاريخ</p><h3>{INVITATION.day}<br />{INVITATION.gregorianDate}</h3><span>{INVITATION.hijriDate}</span></article>
-            <article className="detail-card featured"><span className="detail-icon"><Icon name="clock" /></span><p>الموعد</p><h3>{INVITATION.time}</h3><span>نسعد بوصولكم قبل الموعد بقليل</span></article>
-            <article className="detail-card"><span className="detail-icon"><Icon name="location" /></span><p>المكان</p><h3>{INVITATION.venue}</h3><span>{INVITATION.area}</span></article>
+            <article className="detail-card"><span className="detail-icon"><Icon name="calendar" /></span><p>اليوم والتاريخ</p><h3><time dateTime="2026-11-06">{INVITATION.day}<br />{INVITATION.gregorianDate}</time></h3><span>{INVITATION.hijriDate}</span></article>
+            <article className="detail-card featured"><span className="detail-icon"><Icon name="clock" /></span><p>الموعد</p><h3><time dateTime="2026-11-06T18:00:00+02:00">{INVITATION.time}</time></h3><span>نسعد بوصولكم قبل الموعد بقليل</span></article>
+            <article className="detail-card"><span className="detail-icon"><Icon name="location" /></span><p>المكان</p><address><h3>{INVITATION.venue}</h3><span>{INVITATION.area}</span></address></article>
           </div>
         </section>
 
-        <section className="map-section" aria-labelledby="map-title">
+        <section className="map-section" id="place" aria-labelledby="map-title">
           <div className="map-copy">
             <p className="eyebrow">مكان اللقاء</p><h2 id="map-title">خطوتكم إلينا<br />تكمّل فرحتنا</h2>
-            <div className="venue-line"><Icon name="location" /><p>{INVITATION.venue}<br />{INVITATION.area}</p></div>
-            <a href={INVITATION.mapSearchUrl} target="_blank" rel="noreferrer" className="directions-button"><span>افتحوا اتجاهات الوصول</span><Icon name="arrow" /></a>
+            <address className="venue-line"><Icon name="location" /><p>{INVITATION.venue}<br />{INVITATION.area}</p></address>
+            <a href={INVITATION.mapSearchUrl} target="_blank" rel="noopener noreferrer" className="directions-button"><span>افتحوا اتجاهات الوصول</span><Icon name="arrow" /></a>
           </div>
           <div className="map-frame"><VenueMap /></div>
         </section>
 
-        <section className="wishes-section" aria-labelledby="wishes-title">
+        <section className="wishes-section" id="wishes" aria-labelledby="wishes-title">
           <div className="wishes-copy">
             <span className="wish-heart"><Icon name="heart" /></span><p className="eyebrow">ذكرى منكم تبقى معنا</p>
             <h2 id="wishes-title">اتركوا لنا<br />دعوة من القلب</h2>
@@ -456,7 +464,7 @@ export default function Home() {
         </section>
 
         <section className="closing-section">
-          <img className="closing-art" src={`${basePath}/watercolor-couple.png`} alt="" loading="lazy" decoding="async" />
+          <img className="closing-art" src={`${basePath}/watercolor-couple.png`} alt="" width={1026} height={1536} loading="lazy" decoding="async" />
           <div className="closing-card">
             <span className="closing-monogram">ع <span className="ampersand">&amp;</span> ن</span><p>بارك الله لكما وبارك عليكما</p><h2>وجمع بينكما في خير</h2><span className="closing-mark">ننتظركم بكل الحب</span>
           </div>
@@ -465,8 +473,13 @@ export default function Home() {
           <div className="footer-line">
             <span className="footer-names">عبدالرحمن <span className="ampersand">&amp;</span> نورا</span>
             <span className="footer-flower">✦</span>
-            <span>6 نوفمبر 2026</span>
+            <time dateTime="2026-11-06">6 نوفمبر 2026</time>
           </div>
+          <nav className="footer-nav" aria-label="أقسام الدعوة">
+            <a href="#details">الموعد</a>
+            <a href="#place">المكان</a>
+            <a href="#wishes">رسائلكم</a>
+          </nav>
           <p className="footer-credit" lang="en" dir="ltr">Made with love by sister of the bride. Wishing you both all the best.</p>
         </footer>
       </main>

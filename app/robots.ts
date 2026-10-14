@@ -10,7 +10,7 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: root ? `${root}/` : "/",
-      disallow: [`${root}/messages`, `${root}/messages/`],
+      disallow: [`${root}/messages`, `${root}/messages/`, `${root}/api/`],
     },
     sitemap: absoluteUrl("/sitemap.xml"),
   };

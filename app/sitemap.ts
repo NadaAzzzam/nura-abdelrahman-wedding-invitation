@@ -7,9 +7,10 @@ export default function sitemap(): MetadataRoute.Sitemap {
   return [
     {
       url: absoluteUrl("/"),
-      lastModified: new Date("2026-10-14"),
+      lastModified: new Date("2026-10-15"),
       changeFrequency: "weekly",
       priority: 1,
+      images: [absoluteUrl("/og.jpg"), absoluteUrl("/watercolor-couple.png")],
     },
   ];
 }

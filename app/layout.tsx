@@ -2,7 +2,7 @@ import type { Metadata, Viewport } from "next";
 import type { CSSProperties } from "react";
 import "leaflet/dist/leaflet.css";
 import "./globals.css";
-import { basePath, invitation, shareImage, siteOrigin } from "./site";
+import { basePath, invitation, searchKeywords, shareImage, siteOrigin } from "./site";
 
 const coupleNames = `${invitation.groom} و${invitation.bride}`;
 
@@ -25,16 +25,13 @@ export const metadata: Metadata = {
   creator: coupleNames,
   publisher: coupleNames,
   category: "دعوة",
-  keywords: [
-    "عقد قران",
-    invitation.groom,
-    invitation.bride,
-    "دعوة زفاف",
-    invitation.gregorianDate,
-    invitation.venue,
-  ],
+  keywords: searchKeywords,
   alternates: {
     canonical: `${basePath}/`,
+    languages: {
+      ar: `${basePath}/`,
+      "ar-EG": `${basePath}/`,
+    },
   },
   robots: {
     index: true,
@@ -62,9 +59,16 @@ export const metadata: Metadata = {
     description: invitation.shareDescription,
     type: "website",
     locale: "ar_EG",
+    alternateLocale: ["ar"],
     url: `${basePath}/`,
     siteName: coupleNames,
     images: [shareImage],
+  },
+  other: {
+    "geo.region": "EG-C",
+    "geo.placename": "عين شمس، القاهرة",
+    "geo.position": "30.130129;31.356288",
+    ICBM: "30.130129, 31.356288",
   },
   twitter: {
     card: "summary_large_image",
@@ -99,6 +103,7 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" style={couplePhoto}>
       <head>
         <link rel="mask-icon" href={`${basePath}/safari-pinned-tab.svg`} color="#a6535c" />
+        <link rel="preload" as="image" href={`${basePath}/watercolor-couple.png`} fetchPriority="high" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

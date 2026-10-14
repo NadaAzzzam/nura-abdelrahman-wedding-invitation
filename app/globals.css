@@ -29,12 +29,12 @@
 html { scroll-behavior: smooth; }
 html:has(.envelope-stage) { overflow: hidden; }
 body {
-  min-width: 320px;
   margin: 0;
   background: #e4d0d2;
   color: var(--ink);
   font-family: var(--font-body);
 }
+address { margin: 0; font-style: normal; }
 button, a, input, textarea { font: inherit; }
 button, a { -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 img { display: block; max-width: 100%; }
@@ -329,7 +329,7 @@ svg { width: 1.25em; height: 1.25em; }
 .hero-scroll {
   position: absolute;
   z-index: 4;
-  top: calc(100svh - 62px);
+  top: calc(100svh - 62px - env(safe-area-inset-bottom, 0px));
   left: 50%;
   display: inline-flex;
   min-height: 44px;
@@ -408,7 +408,8 @@ svg { width: 1.25em; height: 1.25em; }
 .detail-icon svg { width: 24px; height: 24px; }
 .detail-card p { margin: 0 0 9px; color: var(--rose-mid); font-size: .68rem; font-weight: 700; letter-spacing: .12em; }
 .detail-card h3 { margin: 0; font-size: clamp(1rem,2vw,1.22rem); font-weight: 600; line-height: 1.7; }
-.detail-card > span:last-child:not(.detail-icon) { display: block; margin-top: 7px; color: var(--ink-soft); font-size: .76rem; line-height: 1.6; }
+.detail-card > span:last-child:not(.detail-icon),
+.detail-card address > span { display: block; margin-top: 7px; color: var(--ink-soft); font-size: .76rem; line-height: 1.6; }
 
 /* Map */
 .map-section { display: grid; min-height: 640px; grid-template-columns: minmax(320px, .78fr) minmax(0, 1.22fr); background: var(--mist); }
@@ -425,6 +426,9 @@ svg { width: 1.25em; height: 1.25em; }
 .venue-marker { border: 0; background: transparent; }
 .venue-marker span { display: grid; width: 44px; height: 44px; place-items: center; border: 3px solid var(--paper); border-radius: 50% 50% 50% 0; background: var(--rose-deep); color: white; box-shadow: 0 7px 16px rgba(62,62,56,.25); transform: rotate(-45deg); }
 .leaflet-popup-content-wrapper { border-radius: 12px; font-family: var(--font-body); text-align: right; }
+.leaflet-control-zoom a { width: 40px; height: 40px; line-height: 38px; font-size: 18px; }
+.leaflet-top.leaflet-left { margin-top: 14px; margin-left: 12px; }
+.leaflet-bar { border: 0; box-shadow: 0 8px 18px rgba(20, 9, 11, .16); }
 
 /* Wishes */
 .wishes-section { position: relative; display: grid; align-items: center; grid-template-columns: .8fr 1.2fr; gap: clamp(35px,7vw,90px); overflow: hidden; padding: clamp(82px,11vw,138px) clamp(24px,8vw,105px); background: var(--cream); }
@@ -441,7 +445,7 @@ svg { width: 1.25em; height: 1.25em; }
 .field-group input { min-height: 52px; padding: 0 16px; }
 .field-group textarea { min-height: 146px; padding: 15px 16px 32px; line-height: 1.7; resize: vertical; }
 .field-group input:focus, .field-group textarea:focus { border-color: var(--rose); box-shadow: 0 0 0 4px rgba(166, 83, 92, .16); }
-.character-count { position: absolute; bottom: 10px; left: 12px; color: var(--ink-soft); font-size: .68rem; }
+.character-count { position: absolute; bottom: 10px; left: 12px; color: var(--ink-soft); font-size: .68rem; direction: ltr; unicode-bidi: isolate; }
 .honeypot { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
 .send-wish-button, .wish-success button { display: inline-flex; min-height: 53px; align-items: center; justify-content: center; gap: 11px; border: 0; border-radius: 999px; background: var(--rose); color: #fff8f7; cursor: pointer; box-shadow: 0 13px 30px rgba(166, 83, 92, .28); transition: background 180ms, transform 180ms; }
 .send-wish-button svg { width: 18px; height: 18px; }
@@ -486,7 +490,10 @@ svg { width: 1.25em; height: 1.25em; }
 .closing-card p { margin: 0 0 2px; color: var(--rose-mid); font-size: 1rem; }
 .closing-card h2 { font-family: var(--font-display); font-size: clamp(2rem, 4.4vw, 3.1rem); font-weight: 700; line-height: 1.45; }
 .closing-mark { display: block; margin-top: 14px; color: var(--ink); font-size: .8rem; letter-spacing: .08em; }
-footer { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; padding: 25px 18px 28px; background: var(--night); color: rgba(255,248,247,.92); font-size: .74rem; text-align: center; }
+footer { display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 10px; padding: 25px 18px max(28px, calc(env(safe-area-inset-bottom, 0px) + 16px)); background: var(--night); color: rgba(255,248,247,.92); font-size: .74rem; text-align: center; }
+.footer-nav { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 6px 16px; }
+.footer-nav a { color: rgba(255,248,247,.86); font-size: .78rem; text-decoration: none; }
+.footer-nav a:hover { color: var(--blush); }
 .footer-line { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 18px; }
 .footer-names { font-family: var(--font-display); font-size: 1.2rem; font-weight: 700; }
 .footer-names .ampersand { color: var(--blush); font-size: 0.85em; }
@@ -554,7 +561,7 @@ footer { display: flex; align-items: center; justify-content: center; flex-direc
 
 @media (max-width: 820px) {
   .pearl-clasp { width: clamp(102px, 32vw, 132px); }
-  .envelope-prompt { top: calc(50% + clamp(76px, 22vw, 104px)); }
+  .envelope-prompt { top: calc(50% + clamp(86px, 26vw, 118px)); }
   .hero { min-height: max(760px, 100svh); }
   .hero::before { background-position: center bottom; opacity: .34; }
   .hero-art {
@@ -592,7 +599,7 @@ footer { display: flex; align-items: center; justify-content: center; flex-direc
   .detail-icon { margin-bottom: 15px; }
   .map-copy { padding-bottom: 34px; }
   .map-frame { min-height: 390px; }
-  .map-canvas { min-height: 372px; border-width: 7px; border-radius: 100px 18px 18px 18px; }
+  .map-canvas { min-height: 372px; border-width: 7px; border-radius: 36px 18px 18px 18px; }
   .wishes-section { gap: 32px; }
   .wishes-form-card { padding: 42px 24px 28px; border-radius: 82px 18px 18px 18px; }
   .messages-toolbar, .wish-item header { align-items: stretch; flex-direction: column; }
@@ -603,8 +610,8 @@ footer { display: flex; align-items: center; justify-content: center; flex-direc
 @media (max-width: 520px) {
   .hero { min-height: max(720px, 100svh); }
   .hero-tools { top: max(10px, env(safe-area-inset-top)); left: 10px; }
-  .hero .music-control button { width: 42px; height: 42px; }
-  .hero .music-icon { width: 34px; height: 34px; flex-basis: 34px; }
+  .hero .music-control button { width: 44px; height: 44px; }
+  .hero .music-icon { width: 36px; height: 36px; flex-basis: 36px; }
   .hero-arch { width: calc(100% - 20px); margin-top: max(8px, env(safe-area-inset-top)); padding: 14px 14px 10px; }
   .hero-arch blockquote { font-size: .8rem; line-height: 1.55; }
   .bismillah { padding-inline: 30px; font-size: 1.04rem; line-height: 1.5; }
@@ -616,8 +623,9 @@ footer { display: flex; align-items: center; justify-content: center; flex-direc
   .poster-num span, .poster-num small { font-size: .76rem; }
   .poster-num strong { font-size: 2.05rem; }
   .poster-venue { font-size: .82rem; line-height: 1.5; }
-  .hero-scroll { top: calc(100svh - 58px); min-height: 46px; padding-inline: 16px; white-space: nowrap; }
-  .date-poster { top: 24px; right: -12px; }
+  .hero-scroll { top: calc(100svh - 58px - env(safe-area-inset-bottom, 0px)); min-height: 46px; padding-inline: 16px; white-space: nowrap; }
+  .date-poster { top: 16px; right: 6px; }
+  .date-poster strong { font-size: clamp(4.2rem, 18vw, 6.5rem); }
   .section-heading h2, .map-copy h2, .wishes-copy h2, .closing-card h2 { font-size: clamp(2rem, 11vw, 2.8rem); line-height: 1.45; }
   .section-intro { margin-top: 13px; font-size: .88rem; }
   .countdown { margin: 34px auto 42px; }
@@ -631,6 +639,43 @@ footer { display: flex; align-items: center; justify-content: center; flex-direc
   .closing-card p { font-size: .9rem; }
   .footer-line { gap: 9px; }
   .footer-credit { font-size: .68rem; }
+}
+
+@media (max-width: 340px) {
+  .hero-arch { width: calc(100% - 12px); padding-inline: 8px; }
+  .hero h1 { font-size: 1.8rem; }
+  .poster-date > p { font-size: .7rem; }
+  .poster-num { min-width: 3.3rem; margin-inline: 4px; padding-inline: 6px; }
+  .poster-num strong { font-size: 1.85rem; }
+  .bismillah { padding-inline: 4px; font-size: .96rem; }
+}
+
+@media (max-height: 520px) and (max-width: 1024px) {
+  .pearl-clasp { top: 42%; width: min(96px, 26vh); }
+  .envelope-prompt {
+    top: calc(42% + min(96px, 26vh) * 0.67 + 14px);
+    bottom: auto;
+    transform: translateX(-50%);
+  }
+  .hero { min-height: auto; padding-bottom: 4px; }
+  .hero-arch { margin-top: 4px; padding-top: 8px; padding-bottom: 4px; }
+  .bismillah { font-size: 1rem; gap: 8px; }
+  .hero-arch blockquote { margin-top: 2px; font-size: .78rem; line-height: 1.35; }
+  .poster-lead { margin-top: 2px; font-size: .76rem; line-height: 1.4; }
+  .hero h1 { margin-top: 0; font-size: clamp(1.55rem, 4.6vw, 2.15rem); line-height: 1.12; }
+  .poster-date, .poster-venue { margin-top: 2px; }
+  .poster-num strong { font-size: 1.7rem; }
+  .hero-scroll {
+    position: relative;
+    top: auto;
+    right: auto;
+    left: auto;
+    display: flex;
+    width: fit-content;
+    margin: 8px auto 10px;
+    transform: none;
+  }
+  .closing-section { min-height: auto; padding-top: 16px; padding-bottom: 16px; }
 }
 
 @media (max-width: 380px) {
