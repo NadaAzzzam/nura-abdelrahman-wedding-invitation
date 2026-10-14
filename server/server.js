@@ -1,9 +1,16 @@
+import { createHmac, createHash, randomUUID, timingSafeEqual } from "node:crypto";
 import { createServer } from "node:http";
 import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 
 const port = Number(process.env.PORT || 3000);
 const dataFile = path.join(process.cwd(), "data", "wishes.json");
+const adminUser = process.env.ADMIN_USER || "";
+const adminPassword = process.env.ADMIN_PASSWORD || "";
+const sessionSecret =
+  process.env.WISHES_SESSION_SECRET ||
+  createHash("sha256").update(`nura-wishes:${adminPassword}`).digest("hex");
+const sessionMs = 7 * 24 * 60 * 60 * 1000;
 const allowedOrigins = new Set(
   (process.env.ALLOWED_ORIGINS ||
     "https://nadaazzzam.github.io,http://localhost:5173,http://127.0.0.1:5173")
@@ -14,15 +21,21 @@ const allowedOrigins = new Set(
 
 let writeQueue = Promise.resolve();
 
+function originAllowed(origin) {
+  if (!origin) return false;
+  if (allowedOrigins.has(origin)) return true;
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin);
+}
+
 function corsHeaders(origin) {
   const headers = {
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type",
+    "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type, Authorization",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
   };
 
-  if (origin && allowedOrigins.has(origin)) {
+  if (originAllowed(origin)) {
     headers["Access-Control-Allow-Origin"] = origin;
   }
 
@@ -30,11 +43,10 @@ function corsHeaders(origin) {
 }
 
 function send(res, status, body, origin) {
-  const headers = {
+  res.writeHead(status, {
     "Content-Type": "application/json; charset=utf-8",
     ...corsHeaders(origin),
-  };
-  res.writeHead(status, headers);
+  });
   res.end(JSON.stringify(body));
 }
 
@@ -54,6 +66,41 @@ function readBody(req) {
     req.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
     req.on("error", reject);
   });
+}
+
+function safeEqual(left, right) {
+  const a = createHash("sha256").update(String(left)).digest();
+  const b = createHash("sha256").update(String(right)).digest();
+  return timingSafeEqual(a, b);
+}
+
+function signToken() {
+  const payload = Buffer.from(
+    JSON.stringify({ exp: Date.now() + sessionMs }),
+  ).toString("base64url");
+  const signature = createHmac("sha256", sessionSecret).update(payload).digest("base64url");
+  return `${payload}.${signature}`;
+}
+
+function verifyToken(header) {
+  const match = /^Bearer\s+(.+)$/i.exec(header || "");
+  if (!match) return false;
+  const [payload, signature] = match[1].trim().split(".");
+  if (!payload || !signature) return false;
+
+  const expected = createHmac("sha256", sessionSecret).update(payload).digest("base64url");
+  const actualBuffer = Buffer.from(signature);
+  const expectedBuffer = Buffer.from(expected);
+  if (actualBuffer.length !== expectedBuffer.length || !timingSafeEqual(actualBuffer, expectedBuffer)) {
+    return false;
+  }
+
+  try {
+    const data = JSON.parse(Buffer.from(payload, "base64url").toString("utf8"));
+    return typeof data.exp === "number" && data.exp > Date.now();
+  } catch {
+    return false;
+  }
 }
 
 async function readWishes() {
@@ -77,11 +124,20 @@ function queueWrite(wishes) {
   return task;
 }
 
+function publicWish(wish) {
+  return {
+    id: wish.id,
+    guestName: wish.guestName,
+    message: wish.message,
+    createdAt: wish.createdAt,
+  };
+}
+
 const server = createServer(async (req, res) => {
   const origin = req.headers.origin;
   const url = new URL(req.url || "/", "http://localhost");
 
-  if (req.method === "OPTIONS" && url.pathname === "/api/wishes") {
+  if (req.method === "OPTIONS" && url.pathname.startsWith("/api/wishes")) {
     res.writeHead(204, corsHeaders(origin));
     res.end();
     return;
@@ -89,6 +145,75 @@ const server = createServer(async (req, res) => {
 
   if (req.method === "GET" && url.pathname === "/health") {
     send(res, 200, { ok: true }, origin);
+    return;
+  }
+
+  if (req.method === "POST" && url.pathname === "/api/wishes/login") {
+    try {
+      const raw = await readBody(req);
+      const payload = raw ? JSON.parse(raw) : {};
+      const username = String(payload.username || "");
+      const password = String(payload.password || "");
+      if (!adminUser || !adminPassword || !safeEqual(username, adminUser) || !safeEqual(password, adminPassword)) {
+        send(res, 401, { error: "اسم المستخدم أو كلمة المرور غير صحيحة." }, origin);
+        return;
+      }
+      send(res, 200, { token: signToken() }, origin);
+    } catch {
+      send(res, 400, { error: "تعذر تسجيل الدخول." }, origin);
+    }
+    return;
+  }
+
+  if (req.method === "GET" && url.pathname === "/api/wishes") {
+    if (!verifyToken(req.headers.authorization)) {
+      send(res, 401, { error: "انتهت الجلسة. سجّلوا الدخول مرة أخرى." }, origin);
+      return;
+    }
+
+    try {
+      const wishes = await readWishes();
+      let changed = false;
+      for (const wish of wishes) {
+        if (!wish.id) {
+          wish.id = randomUUID();
+          changed = true;
+        }
+      }
+      if (changed) await queueWrite(wishes);
+      wishes.sort((first, second) => String(second.createdAt).localeCompare(String(first.createdAt)));
+      send(res, 200, { wishes: wishes.map(publicWish) }, origin);
+    } catch {
+      send(res, 500, { error: "تعذر تحميل الرسائل." }, origin);
+    }
+    return;
+  }
+
+  if (req.method === "DELETE" && url.pathname === "/api/wishes") {
+    if (!verifyToken(req.headers.authorization)) {
+      send(res, 401, { error: "انتهت الجلسة. سجّلوا الدخول مرة أخرى." }, origin);
+      return;
+    }
+
+    try {
+      const raw = await readBody(req);
+      const payload = raw ? JSON.parse(raw) : {};
+      const id = String(payload.id || "");
+      if (!id) {
+        send(res, 400, { error: "تعذر حذف الرسالة." }, origin);
+        return;
+      }
+      const wishes = await readWishes();
+      const remaining = wishes.filter((wish) => wish.id !== id);
+      if (remaining.length === wishes.length) {
+        send(res, 404, { error: "تعذر حذف الرسالة." }, origin);
+        return;
+      }
+      await queueWrite(remaining);
+      send(res, 200, { deleted: true }, origin);
+    } catch {
+      send(res, 500, { error: "تعذر حذف الرسالة." }, origin);
+    }
     return;
   }
 
@@ -111,6 +236,7 @@ const server = createServer(async (req, res) => {
 
       const wishes = await readWishes();
       wishes.push({
+        id: randomUUID(),
         guestName,
         message,
         createdAt: new Date().toISOString(),

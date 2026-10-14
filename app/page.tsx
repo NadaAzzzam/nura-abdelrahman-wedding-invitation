@@ -1,6 +1,7 @@
 "use client";
 
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
+import { invitationJsonLd } from "./site";
 
 const INVITATION = {
   groom: "عبدالرحمن",
@@ -18,9 +19,9 @@ const INVITATION = {
 
 const VOCAL_TRACK_ID = "qxjRGJezZkQ";
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const wishesEndpoint = process.env.NEXT_PUBLIC_WISHES_ENDPOINT;
-const saveWishesOnDevice =
-  !wishesEndpoint && process.env.NEXT_PUBLIC_STATIC_SITE === "1";
+const wishesEndpoint =
+  process.env.NEXT_PUBLIC_WISHES_ENDPOINT ||
+  "https://nura-wedding-wishes.bonto.run/api/wishes";
 
 type RemainingTime = {
   days: number;
@@ -127,11 +128,11 @@ function VocalButton() {
       >
         <span className="music-icon"><Icon name={playing ? "pause" : "play"} /></span>
         <span className="music-label">
-          <b>
-            {playing ? <span className="eq" aria-hidden="true"><i /><i /><i /></span> : null}
-            {playing ? "يُعرض الآن" : "استمعوا"}
-          </b>
-          <small>{playing ? "إيقاف الدعاء" : "بارك الله لكما · فوكال"}</small>
+          {playing ? <span className="eq" aria-hidden="true"><i /><i /><i /></span> : null}
+          <span className="music-copy">
+            <b>{playing ? "يُعرض الآن" : "استمعوا"}</b>
+            <small>{playing ? "إيقاف الدعاء" : "بارك الله لكما · فوكال"}</small>
+          </span>
         </span>
       </button>
     </div>
@@ -147,8 +148,8 @@ function VenueMap() {
 
     void import("leaflet").then((leaflet) => {
       if (!active || !mapElement.current) return;
-      mapInstance = leaflet.map(mapElement.current, { zoomControl: true, scrollWheelZoom: false, attributionControl: true }).setView(INVITATION.coordinates, 14);
-      leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' }).addTo(mapInstance);
+      mapInstance = leaflet.map(mapElement.current, { zoomControl: true, scrollWheelZoom: false, attributionControl: false }).setView(INVITATION.coordinates, 14);
+      leaflet.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "" }).addTo(mapInstance);
       const markerIcon = leaflet.divIcon({ className: "venue-marker", html: '<span aria-hidden="true">♥</span>', iconSize: [48, 48], iconAnchor: [24, 46] });
       leaflet.marker(INVITATION.coordinates, { icon: markerIcon }).addTo(mapInstance).bindPopup(`<strong>${INVITATION.venue}</strong>`);
     });
@@ -165,7 +166,7 @@ function VenueMap() {
 function WishForm() {
   const [guestName, setGuestName] = useState("");
   const [message, setMessage] = useState("");
-  const [status, setStatus] = useState<"idle" | "sending" | "success" | "saved" | "error">("idle");
+  const [status, setStatus] = useState<"idle" | "sending" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
 
   const submitWish = async (event: FormEvent<HTMLFormElement>) => {
@@ -175,35 +176,27 @@ function WishForm() {
     const form = new FormData(event.currentTarget);
     const trimmedMessage = message.trim();
 
-    if (saveWishesOnDevice) {
-      if (form.get("website")) {
-        setStatus("saved");
-        return;
-      }
-      if (trimmedMessage.length < 2 || trimmedMessage.length > 500) {
-        setErrorMessage("اكتبي رسالة من حرفين إلى 500 حرف.");
-        setStatus("error");
-        return;
-      }
-      const stored = window.localStorage.getItem("wedding-wishes");
-      const wishes = stored ? (JSON.parse(stored) as unknown[]) : [];
-      wishes.push({
-        guestName: guestName.trim().slice(0, 60) || "ضيف محب",
-        message: trimmedMessage,
-        createdAt: new Date().toISOString(),
-      });
-      window.localStorage.setItem("wedding-wishes", JSON.stringify(wishes));
+    if (form.get("website")) {
       setGuestName("");
       setMessage("");
-      setStatus("saved");
+      setStatus("success");
+      return;
+    }
+    if (trimmedMessage.length < 2 || trimmedMessage.length > 500) {
+      setErrorMessage("اكتبي رسالة من حرفين إلى 500 حرف.");
+      setStatus("error");
       return;
     }
 
     try {
-      const response = await fetch(wishesEndpoint || `${basePath}/api/wishes`, {
+      const response = await fetch(wishesEndpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ guestName, message, website: form.get("website") }),
+        body: JSON.stringify({
+          guestName: guestName.trim().slice(0, 60) || "ضيف محب",
+          message: trimmedMessage,
+          website: form.get("website"),
+        }),
       });
       const result = (await response.json()) as { error?: string };
       if (!response.ok) throw new Error(result.error || "تعذر إرسال الرسالة.");
@@ -211,17 +204,22 @@ function WishForm() {
       setMessage("");
       setStatus("success");
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : "تعذر إرسال الرسالة.");
+      const message = error instanceof Error ? error.message : "";
+      setErrorMessage(
+        message.startsWith("تعذر") || message.startsWith("اكتبي")
+          ? message
+          : "تعذر إرسال الرسالة.",
+      );
       setStatus("error");
     }
   };
 
-  if (status === "success" || status === "saved") {
+  if (status === "success") {
     return (
       <div className="wish-success" role="status">
         <span><Icon name="heart" /></span>
-        <p className="eyebrow">{status === "saved" ? "حُفظت على هذا الجهاز" : "وصلتنا رسالتكم"}</p>
-        <h3>{status === "saved" ? "شكرًا لكلمتكم الجميلة" : "شكرًا لأنكم شاركتمونا الفرحة"}</h3>
+        <p className="eyebrow">وصلتنا رسالتكم</p>
+        <h3>شكرًا لأنكم شاركتمونا الفرحة</h3>
         <button type="button" onClick={() => setStatus("idle")}>اكتبوا رسالة أخرى</button>
       </div>
     );
@@ -254,39 +252,57 @@ export default function Home() {
   const openInvitation = () => {
     if (opening) return;
     setOpening(true);
-    window.setTimeout(() => setOpened(true), 1050);
+    window.setTimeout(() => setOpened(true), 1180);
   };
 
   return (
     <>
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(invitationJsonLd).replaceAll("<", "\\u003c") }} />
       {!opened ? (
         <section className={`envelope-stage ${opening ? "is-opening" : ""}`} aria-label="افتح دعوة عقد القران">
           <div className="intro-wash intro-wash-one" /><div className="intro-wash intro-wash-two" />
           <div className="intro-copy">
             <span className="intro-monogram">ع <span className="ampersand">&amp;</span> ن</span>
             <p className="eyebrow">دعوة من القلب</p>
-            <h1>إلى مَن نحب</h1>
+            <p className="intro-title">إلى مَن نحب</p>
             <p>يسعدنا أن تكونوا بيننا في يومٍ نبدأ به حكايتنا.</p>
           </div>
-          <div className="envelope-wrap">
-            <div className="envelope" aria-hidden="true">
-              <div className="envelope-back" />
-              <div className="invitation-card-mini">
-                <span>عقد قران</span><strong>{INVITATION.groom} <span className="ampersand">&amp;</span> {INVITATION.bride}</strong><small>06 · 11 · 2026</small>
-              </div>
-              <div className="envelope-pocket" /><div className="envelope-flap" /><div className="wax-seal">ن</div>
+          <div className="envelope-column">
+            <div className="envelope-wrap">
+              <button className="envelope" type="button" onClick={openInvitation} aria-label="افتحوا الظرف">
+                <span className="env-scene" aria-hidden="true">
+                  <span className="env-shadow" />
+                  <span className="env-body" />
+                  <span className="env-card">
+                    <span>عقد قران</span>
+                    <strong>{INVITATION.groom} <span className="ampersand">&amp;</span> {INVITATION.bride}</strong>
+                    <small>06 · 11 · 2026</small>
+                  </span>
+                  <span className="env-flap"><span className="env-photo" /></span>
+                  <span className="env-crease env-crease-left" />
+                  <span className="env-crease env-crease-right" />
+                  <span className="wax-seal"><span>ن</span></span>
+                </span>
+              </button>
             </div>
+            <p className="envelope-hint">الظرف مختوم · اضغطوا لفتح الدعوة</p>
+            <button className="open-button" type="button" onClick={openInvitation}><span>افتحوا دعوتكم</span><Icon name="arrow" /></button>
           </div>
-          <button className="open-button" type="button" onClick={openInvitation}><span>افتحوا دعوتكم</span><Icon name="arrow" /></button>
         </section>
       ) : null}
 
       <main className={`invitation ${opened ? "is-visible" : ""}`}>
-        <VocalButton />
         <section className="hero" aria-labelledby="invitation-title">
           <div className="hero-art" aria-hidden="true" />
+          <div className="hero-topline">
+            <span className="hero-kicker">دعوة عقد قران</span>
+            <span className="hero-monogram">ع <span className="ampersand">&amp;</span> ن</span>
+            <div className="hero-tools">
+              <time className="hero-date" dateTime="2026-11-06"><span>06</span><span>11</span><span>2026</span></time>
+              <VocalButton />
+            </div>
+          </div>
           <div className="hero-content">
-            <div className="hero-topline"><span>دعوة عقد قران</span><span className="hero-monogram">ع <span className="ampersand">&amp;</span> ن</span><span>06 · 11 · 2026</span></div>
             <div className="verse-card">
               <p className="bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
               <blockquote>﴿ وَمِنْ آيَاتِهِ أَنْ خَلَقَ لَكُم مِّنْ أَنفُسِكُمْ أَزْوَاجًا لِّتَسْكُنُوا إِلَيْهَا وَجَعَلَ بَيْنَكُم مَّوَدَّةً وَرَحْمَةً ﴾</blockquote>
@@ -332,7 +348,7 @@ export default function Home() {
           <div className="wishes-copy">
             <span className="wish-heart"><Icon name="heart" /></span><p className="eyebrow">ذكرى منكم تبقى معنا</p>
             <h2 id="wishes-title">اتركوا لنا<br />دعوة من القلب</h2>
-            <p>{saveWishesOnDevice ? "اكتبوا دعوة صادقة أو كلمة جميلة. في هذه النسخة تبقى الرسالة محفوظة داخل المتصفح الذي كتبتموها منه." : "كلمة جميلة، دعوة صادقة، أو نصيحة لبداية العمر؛ رسائلكم ستبقى جزءًا عزيزًا من يومنا."}</p>
+            <p>كلمة جميلة، دعوة صادقة، أو نصيحة لبداية العمر؛ رسائلكم ستبقى جزءًا عزيزًا من يومنا.</p>
           </div>
           <div className="wishes-form-card"><WishForm /></div>
         </section>
@@ -343,7 +359,15 @@ export default function Home() {
             <span className="closing-monogram">ع <span className="ampersand">&amp;</span> ن</span><p>بارك الله لكما وبارك عليكما</p><h2>وجمع بينكما في خير</h2><span className="closing-mark">ننتظركم بكل الحب</span>
           </div>
         </section>
-        <footer><span className="footer-names">عبدالرحمن <span className="ampersand">&amp;</span> نورا</span><span className="footer-flower">✦</span><span>6 نوفمبر 2026</span></footer>
+        <footer>
+          <div className="footer-line">
+            <span className="footer-names">عبدالرحمن <span className="ampersand">&amp;</span> نورا</span>
+            <span className="footer-flower">✦</span>
+            <span>6 نوفمبر 2026</span>
+          </div>
+          <p className="footer-credit">صنع بكل حب من أختكم ندى عزام، وأتمنى لكما كل الخير</p>
+          <a className="footer-private" href={`${basePath}/messages/`}>رسائل الضيوف</a>
+        </footer>
       </main>
     </>
   );
