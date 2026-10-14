@@ -16,6 +16,7 @@
 # next.js
 /.next/
 /out/
+.api-static-export-backup/
 
 # misc
 .DS_Store
