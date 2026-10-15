@@ -96,6 +96,7 @@ export default function RootLayout({
 }>) {
   const couplePhoto = {
     "--couple-photo": `url("${basePath}/watercolor-couple.png")`,
+    "--couple-photo-mobile": `url("${basePath}/watercolor-couple-mobile.jpg")`,
     "--lace-doors": `url("${basePath}/lace-doors.jpg")`,
   } as CSSProperties;
 
@@ -103,7 +104,8 @@ export default function RootLayout({
     <html lang="ar" dir="rtl" style={couplePhoto}>
       <head>
         <link rel="mask-icon" href={`${basePath}/safari-pinned-tab.svg`} color="#a6535c" />
-        <link rel="preload" as="image" href={`${basePath}/watercolor-couple.png`} fetchPriority="high" />
+        <link rel="preload" as="image" href={`${basePath}/watercolor-couple-mobile.jpg`} media="(max-width: 820px)" fetchPriority="high" />
+        <link rel="preload" as="image" href={`${basePath}/watercolor-couple.png`} media="(min-width: 821px)" fetchPriority="high" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link

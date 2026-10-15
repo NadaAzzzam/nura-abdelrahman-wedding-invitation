@@ -398,15 +398,18 @@ export default function Home() {
       </noscript>
       <main className={`invitation ${opening || opened ? "is-visible" : "is-waiting"}`}>
         <section className="hero" aria-labelledby="invitation-title">
-          <img
-            className="hero-art"
-            src={`${basePath}/watercolor-couple.png`}
-            alt="رسم مائي لعبدالرحمن ونورا في دعوة عقد القران"
-            width={1026}
-            height={1536}
-            fetchPriority="high"
-            decoding="async"
-          />
+          <picture>
+            <source media="(max-width: 820px)" srcSet={`${basePath}/watercolor-couple-mobile.jpg`} />
+            <img
+              className="hero-art"
+              src={`${basePath}/watercolor-couple.png`}
+              alt="رسم مائي لعبدالرحمن ونورا في دعوة عقد القران"
+              width={1026}
+              height={1536}
+              fetchPriority="high"
+              decoding="async"
+            />
+          </picture>
           <div className="hero-tools"><VocalButton /></div>
           <div className="hero-arch">
             <p className="bismillah">بِسْمِ اللَّهِ الرَّحْمَنِ الرَّحِيمِ</p>
@@ -464,7 +467,10 @@ export default function Home() {
         </section>
 
         <section className="closing-section">
-          <img className="closing-art" src={`${basePath}/watercolor-couple.png`} alt="" width={1026} height={1536} loading="lazy" decoding="async" />
+          <picture>
+            <source media="(max-width: 820px)" srcSet={`${basePath}/watercolor-couple-mobile.jpg`} />
+            <img className="closing-art" src={`${basePath}/watercolor-couple.png`} alt="" width={1026} height={1536} loading="lazy" decoding="async" />
+          </picture>
           <div className="closing-card">
             <span className="closing-monogram">ع <span className="ampersand">&amp;</span> ن</span><p>بارك الله لكما وبارك عليكما</p><h2>وجمع بينكما في خير</h2><span className="closing-mark">ننتظركم بكل الحب</span>
           </div>
