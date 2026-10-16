@@ -1,10 +1,11 @@
 "use client";
 
-import { type FormEvent, useEffect, useState } from "react";
+import { type FormEvent, useCallback, useEffect, useState } from "react";
 import {
   deleteWish,
   listWishes,
   restoreSession,
+  setWishesPublished,
   signIn,
   signOut,
   type GuestWish,
@@ -35,20 +36,24 @@ export default function MessagesPage() {
   const [loadingWishes, setLoadingWishes] = useState(false);
   const [listError, setListError] = useState("");
   const [deletingId, setDeletingId] = useState("");
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [updatingPublication, setUpdatingPublication] = useState(false);
 
-  const showLogin = (message = "") => {
+  const showLogin = useCallback((message = "") => {
     signOut();
     setSessionToken(null);
     setWishes([]);
+    setSelectedIds([]);
     setPhase("login");
     setLoginError(message);
-  };
+  }, []);
 
-  const loadWishes = async (token: string) => {
+  const loadWishes = useCallback(async (token: string) => {
     setLoadingWishes(true);
     setListError("");
     try {
       setWishes(await listWishes(token));
+      setSelectedIds([]);
     } catch (error) {
       const message = error instanceof Error ? error.message : "تعذر تحميل الرسائل.";
       if (message.includes("الجلسة")) {
@@ -59,24 +64,27 @@ export default function MessagesPage() {
     } finally {
       setLoadingWishes(false);
     }
-  };
+  }, [showLogin]);
 
   useEffect(() => {
     let active = true;
-    const token = restoreSession();
-    if (!active) return;
-    if (!token) {
-      setPhase("login");
-      return;
-    }
-    setSessionToken(token);
-    setPhase("ready");
-    void loadWishes(token);
+    const timer = window.setTimeout(() => {
+      const token = restoreSession();
+      if (!active) return;
+      if (!token) {
+        setPhase("login");
+        return;
+      }
+      setSessionToken(token);
+      setPhase("ready");
+      void loadWishes(token);
+    }, 0);
 
     return () => {
       active = false;
+      window.clearTimeout(timer);
     };
-  }, []);
+  }, [loadWishes]);
 
   const submitLogin = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -110,10 +118,49 @@ export default function MessagesPage() {
     try {
       await deleteWish(sessionToken, id);
       setWishes((current) => current.filter((wish) => wish.id !== id));
+      setSelectedIds((current) => current.filter((selectedId) => selectedId !== id));
     } catch (error) {
       setListError(error instanceof Error ? error.message : "تعذر حذف الرسالة.");
     } finally {
       setDeletingId("");
+    }
+  };
+
+  const toggleWish = (id: string) => {
+    setSelectedIds((current) =>
+      current.includes(id)
+        ? current.filter((selectedId) => selectedId !== id)
+        : [...current, id],
+    );
+  };
+
+  const toggleAllWishes = () => {
+    setSelectedIds((current) =>
+      current.length === wishes.length ? [] : wishes.map((wish) => wish.id),
+    );
+  };
+
+  const updatePublication = async (published: boolean) => {
+    if (!sessionToken || selectedIds.length === 0) return;
+    setUpdatingPublication(true);
+    setListError("");
+
+    try {
+      await setWishesPublished(sessionToken, selectedIds, published);
+      const selected = new Set(selectedIds);
+      setWishes((current) =>
+        current.map((wish) => selected.has(wish.id) ? { ...wish, published } : wish),
+      );
+      setSelectedIds([]);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : "تعذر تحديث حالة النشر.";
+      if (message.includes("الجلسة")) {
+        showLogin(message);
+        return;
+      }
+      setListError(message);
+    } finally {
+      setUpdatingPublication(false);
     }
   };
 
@@ -167,6 +214,35 @@ export default function MessagesPage() {
                 <button type="button" onClick={logout}>خروج</button>
               </div>
             </div>
+            {wishes.length > 0 ? (
+              <div className="publication-toolbar" aria-label="أدوات نشر الرسائل">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.length === wishes.length}
+                    onChange={toggleAllWishes}
+                  />
+                  <span>{selectedIds.length > 0 ? `${selectedIds.length} محدد` : "تحديد الكل"}</span>
+                </label>
+                <div>
+                  <button
+                    type="button"
+                    className="publish-button"
+                    onClick={() => void updatePublication(true)}
+                    disabled={selectedIds.length === 0 || updatingPublication}
+                  >
+                    نشر المحدد
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void updatePublication(false)}
+                    disabled={selectedIds.length === 0 || updatingPublication}
+                  >
+                    إخفاء المحدد
+                  </button>
+                </div>
+              </div>
+            ) : null}
             {listError ? <p className="form-error" role="alert">{listError}</p> : null}
             {!loadingWishes && wishes.length === 0 ? (
               <p className="messages-empty">لم تصل أي رسالة بعد.</p>
@@ -175,13 +251,26 @@ export default function MessagesPage() {
                 {wishes.map((wish) => (
                   <li className="wish-item" key={wish.id}>
                     <header>
-                      <strong>{wish.guestName}</strong>
+                      <label className="wish-selector">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.includes(wish.id)}
+                          onChange={() => toggleWish(wish.id)}
+                          aria-label={`تحديد رسالة ${wish.guestName}`}
+                        />
+                        <strong>{wish.guestName}</strong>
+                      </label>
                       <time dateTime={wish.createdAt}>{formatWishDate(wish.createdAt)}</time>
                     </header>
                     <p>{wish.message}</p>
-                    <button type="button" onClick={() => void removeWish(wish.id)} disabled={deletingId === wish.id}>
-                      {deletingId === wish.id ? "جاري الحذف..." : "حذف"}
-                    </button>
+                    <div className="wish-item-footer">
+                      <span className={`publication-status ${wish.published ? "is-published" : ""}`}>
+                        {wish.published ? "منشورة في الدعوة" : "غير منشورة"}
+                      </span>
+                      <button type="button" onClick={() => void removeWish(wish.id)} disabled={deletingId === wish.id}>
+                        {deletingId === wish.id ? "جاري الحذف..." : "حذف"}
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>

@@ -3,11 +3,14 @@ export type GuestWish = {
   guestName: string;
   message: string;
   createdAt: string;
+  published: boolean;
 };
 
 const wishesEndpoint =
   process.env.NEXT_PUBLIC_WISHES_ENDPOINT ||
   "https://nura-wedding-wishes.bonto.run/api/wishes";
+const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
+const publishedWishesEndpoint = `${basePath}/api/published-wishes`;
 const sessionName = "nura-wishes-session";
 const wrongLogin = "اسم المستخدم أو كلمة المرور غير صحيحة.";
 
@@ -68,8 +71,59 @@ export async function listWishes(token: string) {
   }
   if (!response.ok) throw new Error(await readError(response, "تعذر تحميل الرسائل."));
 
+  const body = (await response.json()) as { wishes?: Omit<GuestWish, "published">[] };
+  const adminWishes = Array.isArray(body.wishes) ? body.wishes : [];
+  let publishedIds = new Set<string>();
+  try {
+    publishedIds = new Set((await listPublishedWishes()).map((wish) => wish.id));
+  } catch {
+    // The inbox stays usable even if the optional public list is unavailable.
+  }
+  return adminWishes.map((wish) => ({
+    ...wish,
+    published: publishedIds.has(wish.id),
+  }));
+}
+
+export async function listPublishedWishes() {
+  let response: Response;
+  try {
+    response = await fetch(publishedWishesEndpoint, {
+      cache: "no-store",
+    });
+  } catch {
+    throw new Error("تعذر تحميل الرسائل المنشورة.");
+  }
+
+  if (!response.ok) {
+    throw new Error(await readError(response, "تعذر تحميل الرسائل المنشورة."));
+  }
+
   const body = (await response.json()) as { wishes?: GuestWish[] };
   return Array.isArray(body.wishes) ? body.wishes : [];
+}
+
+export async function setWishesPublished(token: string, ids: string[], published: boolean) {
+  let response: Response;
+  try {
+    response = await fetch(publishedWishesEndpoint, {
+      method: "PATCH",
+      cache: "no-store",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ ids, published }),
+    });
+  } catch {
+    throw new Error("تعذر تحديث حالة النشر.");
+  }
+
+  if (response.status === 401) {
+    signOut();
+    throw new Error("انتهت الجلسة. سجّلوا الدخول مرة أخرى.");
+  }
+  if (!response.ok) throw new Error(await readError(response, "تعذر تحديث حالة النشر."));
 }
 
 export async function deleteWish(token: string, id: string) {
@@ -89,4 +143,11 @@ export async function deleteWish(token: string, id: string) {
   }
 
   if (!response.ok) throw new Error(await readError(response, "تعذر حذف الرسالة."));
+
+  try {
+    await setWishesPublished(token, [id], false);
+  } catch {
+    // The source deletion succeeded; a temporary publication cleanup failure
+    // should not make the admin think the deletion itself failed.
+  }
 }

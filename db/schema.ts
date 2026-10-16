@@ -7,3 +7,11 @@ export const wishes = sqliteTable("wishes", {
   message: text("message").notNull(),
   createdAt: text("created_at").notNull().default(sql`CURRENT_TIMESTAMP`),
 });
+
+export const publishedWishes = sqliteTable("published_wishes", {
+  id: text("id").primaryKey(),
+  guestName: text("guest_name").notNull(),
+  message: text("message").notNull(),
+  createdAt: text("created_at").notNull(),
+  publishedAt: text("published_at").notNull().default(sql`CURRENT_TIMESTAMP`),
+});

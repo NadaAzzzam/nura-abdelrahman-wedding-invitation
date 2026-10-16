@@ -2,6 +2,7 @@
 
 import { type FormEvent, type ReactNode, useEffect, useRef, useState } from "react";
 import { basePath, invitationJsonLd, mapsUrl } from "./site";
+import { listPublishedWishes, type GuestWish } from "./wishes-client";
 
 const INVITATION = {
   groom: "عبدالرحمن",
@@ -380,6 +381,80 @@ function WishForm() {
   );
 }
 
+function formatPublishedWishDate(value: string) {
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return new Intl.DateTimeFormat("ar-EG", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+}
+
+function PublishedWishes() {
+  const [wishes, setWishes] = useState<GuestWish[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    const load = async () => {
+      try {
+        const publishedWishes = await listPublishedWishes();
+        if (active) setWishes(publishedWishes);
+      } catch {
+        // Keep the invitation calm if the optional public feed is unavailable.
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    const refreshWhenVisible = () => {
+      if (document.visibilityState === "visible") void load();
+    };
+
+    void load();
+    const timer = window.setInterval(load, 30_000);
+    document.addEventListener("visibilitychange", refreshWhenVisible);
+
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", refreshWhenVisible);
+    };
+  }, []);
+
+  if (!loading && wishes.length === 0) return null;
+
+  return (
+    <section className="published-wishes" aria-labelledby="published-wishes-title" aria-live="polite">
+      <div className="published-wishes-heading">
+        <div>
+          <p className="eyebrow">كلمات شاركتمونا بها</p>
+          <h3 id="published-wishes-title">رسائل من القلب</h3>
+        </div>
+        {wishes.length > 1 ? <span>مرروا لقراءة المزيد</span> : null}
+      </div>
+      {loading ? (
+        <p className="published-wishes-loading">جاري تحميل الرسائل...</p>
+      ) : (
+        <div className="published-wishes-scroll" tabIndex={0}>
+          {wishes.map((wish) => (
+            <article className="published-wish-card" key={wish.id}>
+              <header>
+                <strong>{wish.guestName}</strong>
+                <time dateTime={wish.createdAt}>{formatPublishedWishDate(wish.createdAt)}</time>
+              </header>
+              <p>{wish.message}</p>
+            </article>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+}
+
 export default function Home() {
   const [opening, setOpening] = useState(false);
   const [opened, setOpened] = useState(false);
@@ -463,7 +538,10 @@ export default function Home() {
             <h2 id="wishes-title">اتركوا لنا<br />دعوة من القلب</h2>
             <p>كلمة جميلة، دعوة صادقة، أو نصيحة لبداية العمر؛ رسائلكم ستبقى جزءًا عزيزًا من يومنا.</p>
           </div>
-          <div className="wishes-form-card"><WishForm /></div>
+          <div className="wishes-panel">
+            <div className="wishes-form-card"><WishForm /></div>
+            <PublishedWishes />
+          </div>
         </section>
 
         <section className="closing-section">
