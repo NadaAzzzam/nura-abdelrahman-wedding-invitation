@@ -580,10 +580,10 @@ export default function Home() {
             <img className="pearl-clasp" src={`${basePath}/lace-clasp.png`} alt="" />
           </span>
           <span className="lacy-door lacy-door-right" aria-hidden="true" />
-          <span className="envelope-prompt">
+          {/* <span className="envelope-prompt">
             <strong>افتحوا دعوتكم</strong>
             <small>عبدالرحمن <span aria-hidden="true">&amp;</span> نورا</small>
-          </span>
+          </span> */}
         </button>
       ) : null}
     </>
