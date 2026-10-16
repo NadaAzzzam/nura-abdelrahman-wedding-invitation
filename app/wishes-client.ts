@@ -9,8 +9,7 @@ export type GuestWish = {
 const wishesEndpoint =
   process.env.NEXT_PUBLIC_WISHES_ENDPOINT ||
   "https://nura-wedding-wishes.bonto.run/api/wishes";
-const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? "";
-const publishedWishesEndpoint = `${basePath}/api/published-wishes`;
+const publishedWishesEndpoint = `${wishesEndpoint.replace(/\/$/, "")}/published`;
 const sessionName = "nura-wishes-session";
 const wrongLogin = "اسم المستخدم أو كلمة المرور غير صحيحة.";
 

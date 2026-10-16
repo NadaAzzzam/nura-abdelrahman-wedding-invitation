@@ -1,6 +1,10 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 
+const wishesEndpoint =
+  process.env.NEXT_PUBLIC_WISHES_ENDPOINT ||
+  "https://nura-wedding-wishes.bonto.run/api/wishes";
+const publishedWishesEndpoint = `${wishesEndpoint.replace(/\/$/, "")}/published`;
 const wishesClient = await import("../app/wishes-client.ts");
 
 test("marks only wishes present in the public publication list", async (context) => {
@@ -14,7 +18,7 @@ test("marks only wishes present in the public publication list", async (context)
   globalThis.sessionStorage = { removeItem() {} };
   globalThis.fetch = async (input) => {
     const url = String(input);
-    if (url.endsWith("/api/published-wishes")) {
+    if (url === publishedWishesEndpoint) {
       return Response.json({
         wishes: [{
           id: "wish-2",
@@ -44,7 +48,7 @@ test("marks only wishes present in the public publication list", async (context)
   );
 });
 
-test("sends selected message ids to the same-origin moderation endpoint", async (context) => {
+test("sends selected message ids to the wishes publication endpoint", async (context) => {
   const originalFetch = globalThis.fetch;
   const originalSessionStorage = globalThis.sessionStorage;
   context.after(() => {
@@ -61,7 +65,7 @@ test("sends selected message ids to the same-origin moderation endpoint", async 
 
   await wishesClient.setWishesPublished("session-token", ["wish-1", "wish-2"], true);
 
-  assert.equal(request.input, "/api/published-wishes");
+  assert.equal(request.input, publishedWishesEndpoint);
   assert.equal(request.init.method, "PATCH");
   assert.equal(request.init.headers.Authorization, "Bearer session-token");
   assert.deepEqual(JSON.parse(request.init.body), {
