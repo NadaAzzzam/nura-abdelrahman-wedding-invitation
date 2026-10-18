@@ -11,7 +11,7 @@ const INVITATION = {
   day: "الجمعة",
   gregorianDate: "6 نوفمبر 2026",
   hijriDate: "26 جمادى الأولى 1448 هـ",
-  time: "بعد صلاة العشاء",
+  time: "بعد صلاة العصر",
   venue: "مسجد عبدالله بن مسعود",
   area: "عين شمس، القاهرة",
   coordinates: [30.130129, 31.356288] as [number, number],
